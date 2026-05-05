@@ -88,83 +88,59 @@ $$
 
 Schema:
 $$
-\text{cities}(\text{id}, \text{name}, \text{area}, \text{is\_capital}, \text{country\_id})
+\text{cities}(\text{name}, \text{country\_name}, \text{area}, \text{governors}, \text{country\_id})
+$$
+
+Schlüssel:
+$$
+(\text{name}, \text{country\_id})
 $$
 
 Mit Domänen:
 $$
-\text{id} : D_{\text{id}}, \quad
+\begin{gathered}
 \text{name} : D_{\text{name}}, \quad
-\text{area} : D_{\text{area}}, \quad
-\text{is\_capital} : D_{\text{is\_capital}}, \quad
+\text{country\_name} : D_{\text{country\_name}}, \quad
+\text{area} : D_{\text{area}}, \quad \\
+\text{governors} : D_{\text{governors}}, \quad
 \text{country\_id} : D_{\text{country\_id}}
+\end{gathered}
 $$
 
 Zum Beispiel:
 $$
-D_{\text{id}} = \mathbb{N}, \quad
+\begin{gathered}
 D_{\text{name}} = \text{String}, \quad
-D_{\text{area}} = \mathbb{R}_{\ge 0}, \quad
-D_{\text{is\_capital}} = \{\text{true}, \text{false}\}, \quad
+D_{\text{country\_name}} = \text{String}, \quad
+D_{\text{area}} = \mathbb{R}_{> 0}, \quad \\
+D_{\text{governors}} = \text{String}, \quad
 D_{\text{country\_id}} = \mathbb{N}
+\end{gathered}
 $$
 
 Die Relation selbst ist eine Teilmenge des kartesischen Produkts:
 $$
 \text{cities} \subseteq
-D_{\text{id}} \times
 D_{\text{name}} \times
+D_{\text{country\_name}} \times
 D_{\text{area}} \times
-D_{\text{is\_capital}} \times
+D_{\text{governors}} \times
 D_{\text{country\_id}}
 $$
 
-# Beispiel Eintrag in Tabelle Stadt
+# Relation vs. Tabelle (Kurzform)
 
-Ein Tupel $t \in \text{cities}$ ist ein einzelner Eintrag der Tabelle, zum Beispiel:
+Tabelle (praktisch) $\approx$ Relation (formal)
 
-$$
-t = (1,\; \text{"Berlin"},\; 891.7,\; \text{true},\; 49)
-$$
+Zeile $\approx$ Tupel
 
-Formal als Funktion:
-$$
-t : \{\text{id}, \text{name}, \text{area}, \text{is\_capital}, \text{country\_id}\}
-\to
-D_{\text{id}} \cup D_{\text{name}} \cup D_{\text{area}} \cup D_{\text{is\_capital}} \cup D_{\text{country\_id}}
-$$
+Spalte $\approx$ Attribut
 
-mit:
-$$
-\begin{gathered}
-t(\text{id}) = 1,\quad
-t(\text{name}) = \text{"Berlin"},\quad
-t(\text{area}) = 891.7,\quad \\
-t(\text{is\_capital}) = \text{true},\quad
-t(\text{country\_id}) = 49
-\end{gathered}
-$$
+## Wichtige Eigenschaften
 
-# Zugriff auf Attribute einer Stadt
-
-Attributzugriff auf ein Tupel der Tabelle \texttt{cities}:
-$$
-t[\text{name}] = \text{"Berlin"}
-$$
-$$
-t[\text{area}] = 891.7
-$$
-
-Projektion auf Attribute einer Relation:
-$$
-\pi_{\text{name}}(\text{Stadt})
-$$
-liefert die Menge aller Städtenamen.
-
-$$
-\pi_{\text{name},\text{area}}(\text{Stadt})
-$$
-liefert die Relation aus den Spalten `name` und `area`.
+- Keine Duplikate von Tupeln
+- Keine Reihenfolge von Tupeln
+- Keine Reihenfolge von Attributen
 
 # Erste Normalform (1NF)
 
@@ -194,21 +170,20 @@ mit **atomaren Domänen** $D_i$
 Jedes Feld enthält genau **einen Wert**
 
 
-# Beispiel (nicht in 1NF)
+# Beispiel `cities` (nicht in 1NF)
 
 | id | name | governors |
 |---|---|---|
 | 1  | Darmstadt | "Hanno Benz, Jochen Partsch"|
 
+# Beispiel `cities` in 1NF überführt
 
-# Beispiel in 1NF überführt
+Neue Tabelle \texttt{city\_governors}:
 
-Tabelle \texttt{cities}:
-
-| id | name   | governor  |
-|----|--------|-------|
-| 1  | Darmstadt | "Hanno Benz" |
-| 1  | Darmstadt | "Jochen Partsch" |
+| city_name | country_id | governor_name | from_date |
+|---|---:|---|---|
+| Darmstadt | 1 | "Jochen Partsch" | "2017-06-25" |
+| Darmstadt | 1 | "Hanno Benz" | "2023-06-25" |
 
 # 1NF Formal (algebraische Sicht)
 
@@ -223,12 +198,12 @@ Ein Attribut enthält mehrere Werte pro Tupel
 
 Relation:
 $$
-R(\text{id}, \text{name}, \text{governors})
+R(\text{city\_name}, \text{country\_id}, \text{governors})
 $$
 
 mit Tupel:
 $$
-t = (1,\; \text{"Darmstadt"},\; \{\text{"Benz"},\; \text{"Partsch"}\})
+t = (\text{"Darmstadt"},\; 1,\; \{(\text{"Jochen Partsch"}, \text{"2017-06-25"}),\;(\text{"Hanno Benz"}, \text{"2023-06-25"})\})
 $$
 
 $\Rightarrow$ $\text{governors} \notin D_{\text{governors}}$ (nicht atomar)
@@ -238,22 +213,22 @@ $\Rightarrow$ $\text{governors} \notin D_{\text{governors}}$ (nicht atomar)
 Ersetze nicht-atomare Werte durch **mehrere Tupel**:
 
 $$
-R' = \bigcup_{v \in t(\text{governors})}
-(1,\; \text{"Darmstadt"},\; v)
+R' = \bigcup_{(g,d) \in t(\text{governors})}
+(\text{"Darmstadt"},\; 1,\; g,\; d)
 $$
 
 ## Resultat (1NF)
 
 $$
-R'(\text{id}, \text{name}, \text{governor})
+R'(\text{city\_name}, \text{country\_id}, \text{governor\_name}, \text{from\_date})
 $$
 
 mit:
 $$
-(1,\; \text{"Darmstadt"},\; \text{"Benz"})
+(\text{"Darmstadt"},\; 1,\; \text{"Jochen Partsch"},\; \text{"2017-06-25"})
 $$
 $$
-(1,\; \text{"Darmstadt"},\; \text{"Partsch"})
+(\text{"Darmstadt"},\; 1,\; \text{"Hanno Benz"},\; \text{"2023-06-25"})
 $$
 
 # 1NF Formale Interpretation
