@@ -265,49 +265,58 @@ $$
 
 Keine **partiellen Abhängigkeiten** von Teilmengen des Schlüssels
 
-# Beispiel (nicht in 2NF)
+# Beispiel `cities` nicht in 2NF
 
 Relation:
 $$
-R(\text{country\_id}, \text{river\_id}, \text{country\_name}, \text{river\_name})
+\text{cities}(\text{name}, \text{country\_name}, \text{country\_id}, \dots)
 $$
 
 Schlüssel:
 $$
-K = (\text{country\_id}, \text{river\_id})
+K = (\text{name}, \text{country\_id})
 $$
 
-Funktionale Abhängigkeiten:
+Funktionale Abhängigkeit:
 $$
 \text{country\_id} \to \text{country\_name}
 $$
-$$
-\text{river\_id} \to \text{river\_name}
-$$
 
-$\Rightarrow$ partielle Abhängigkeiten von Teilmengen von $K$
+$\Rightarrow$ \texttt{country\_name} hängt nur von einem Teil des Schlüssels ab
+
+# Problem
+
+Bei mehreren Städten desselben Landes wird der Ländername mehrfach gespeichert:
+
+| name | country_id | country_name |
+|---|---:|---|
+| Berlin | 1 | Deutschland |
+| Darmstadt | 1 | Deutschland |
+| Köln | 1 | Deutschland |
+
+## Konsequenz
+
+- Redundanz
+- Änderungsanomalien
+- Verletzung der 2NF
 
 # In 2NF überführt
 
 Zerlegung in Relationen mit vollen Abhängigkeiten:
 
 $$
-\text{countries}(\text{id}, \text{name}, \text{area})
+\text{cities}(\text{name}, \text{country\_id}, \dots)
 $$
 
 $$
-\text{rivers}(\text{id}, \text{name}, \text{length})
-$$
-
-$$
-\text{countries\_to\_rivers}(\text{country\_id}, \text{river\_id})
+\text{countries}(\text{id}, \text{name}, \dots)
 $$
 
 ## Eigenschaften
 
-- Keine Redundanz von Namen
-- Änderungen lokal
-- Struktur entspricht funktionalen Abhängigkeiten
+- \texttt{country\_name} steht nur noch in \texttt{countries.name}
+- Änderungen am Ländernamen erfolgen lokal
+- Keine partielle Abhängigkeit vom zusammengesetzten Schlüssel
 
 # Dritte Normalform (3NF)
 
