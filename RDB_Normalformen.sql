@@ -18,8 +18,8 @@ BEGIN;
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     area REAL NOT NULL CHECK (area > 0),
-    languages TEXT NOT NULL,
-    capital_name TEXT NOT NULL, -- NF 3: Transitive Abhängigkeit id→capital_id und capital_id→capital_name,capital_current_governor Also transitiv: id→capital_current_governor
+    languages TEXT NOT NULL, -- NF 1: Second example
+    capital_name TEXT NOT NULL, -- NF 3: id -> capital_name und capital_name -> capital_current_governor; also transitiv id -> capital_current_governor
     capital_current_governor TEXT NOT NULL,
     FOREIGN KEY (id, capital_name) REFERENCES cities(country_id, name)
   );
@@ -34,6 +34,8 @@ BEGIN;
   -- CREATE cross-table countries_to_rivers
   CREATE TABLE countries_to_rivers (
     country_id INTEGER NOT NULL,
+    country_capital_name TEXT NOT NULL,
+    country_capital_area REAL NOT NULL, -- NF 3: country_id -> country_capital_name -> country_capital_area
     river_id INTEGER NOT NULL,
     PRIMARY KEY (country_id, river_id),
     FOREIGN KEY (country_id) REFERENCES countries(id),
@@ -44,9 +46,21 @@ BEGIN;
   CREATE TABLE river_cities (
       river_name TEXT NOT NULL,
       city_name TEXT NOT NULL,
-      river_km REAL NOT NULL CHECK (river_km >= 0),
+      river_km REAL NOT NULL CHECK (river_km >= 0), -- Violation of BCNF because city_name is part of the key, but not superkey and implies river_km
       PRIMARY KEY (river_name, city_name),
       UNIQUE (river_name, river_km)
+  );
+
+  -- CREATE ports
+  CREATE TABLE ports (
+    name TEXT NOT NULL,
+    river_id INTEGER,
+    river_mouth_coordinates TEXT NOT NULL -- BCNF violation: river_id -> river_spring_coordinates, but river_id is not superkey
+    country_id INTEGER NOT NULL,
+    country_name TEXT NOT NULL, -- Second Violation of NF2, because depends only on country_id, not the other two PRIMARY KEY attributes
+    PRIMARY KEY (name, country_id),
+    FOREIGN KEY (country_id) REFERENCES countries(id),
+    FOREIGN KEY (river_id) REFERENCES rivers(id)
   );
 
 COMMIT;

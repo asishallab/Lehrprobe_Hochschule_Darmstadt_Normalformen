@@ -284,7 +284,7 @@ $$
 
 $\Rightarrow$ \texttt{country\_name} hängt nur von einem Teil des Schlüssels ab
 
-# Problem
+# Probleme bei nicht erfüllter 2NF
 
 Bei mehreren Städten desselben Landes wird der Ländername mehrfach gespeichert:
 
@@ -332,6 +332,13 @@ $$
 
 mit Schlüssel $K$
 
+Ein **Superschlüssel** ist eine Attributmenge,
+die jedes Tupel eindeutig identifiziert:
+
+$$
+X \to A_1, \dots, A_n
+$$
+
 Für jede funktionale Abhängigkeit:
 $$
 X \to A
@@ -349,70 +356,98 @@ $$
 - Nicht-Schlüsselattribute dürfen **nicht voneinander abhängen**
 - Alle Informationen hängen **direkt vom Schlüssel** ab
 
-# 3NF – Beispiel mit is_capital
+# Beispiel `countries` nicht in 3NF
 
 Relation:
 $$
-\text{cities}(\text{id}, \text{name}, \text{area}, \text{is\_capital}, \text{country\_id})
+\text{countries}(\text{id}, \text{name}, \text{area}, \text{languages}, \text{capital\_name}, \text{capital\_current\_governor})
 $$
 
 Schlüssel:
 $$
-\text{id}
+K = \text{id}
 $$
 
 ## Funktionale Abhängigkeiten
 
 $$
-\text{id} \to \text{country\_id}
+\text{id} \to \text{capital\_name}
 $$
 
 $$
-(\text{country\_id}, \text{name}) \to \text{is\_capital}
+\text{capital\_name} \to \text{capital\_current\_governor}
 $$
 
-## Problem
+# Verletzung der 3NF
 
+Damit gilt transitiv:
 $$
-\text{country\_id} \to \text{is\_capital}
-$$
-
-(da jedes Land genau eine Hauptstadt hat)
-
-$Rightarrow$ transitiv:
-$$
-\text{id} \to \text{is\_capital}
+\text{id} \to \text{capital\_current\_governor}
 $$
 
-## Interpretation
+aber \texttt{capital\_current\_governor} ist keine direkte Eigenschaft des Landes,
+sondern der Hauptstadt.
 
-- \(\text{is\_capital}\) hängt **nicht direkt** vom Schlüssel ab  
-- sondern über \(\text{country\_id}\)
+$\Rightarrow$ Verletzung der 3NF
 
-$Rightarrow$ **Verletzung der 3NF**
+# Probleme bei nicht erfüllter 3NF - Beispiel
 
-## Lösung (3NF)
+Bei transitiven Abhängigkeiten werden Informationen **redundant** gespeichert:
 
-Trenne Hauptstadtinformation aus:
+| id | name | capital_name | capital_current_governor |
+|---:|---|---|---|
+| 1 | Deutschland | Berlin | Kai Wegner |
+| 2 | Deutschland | Berlin | Franz Beispiel |
+
+Änderungen des aktuellen `governor` müssten in `city_governors` *und*
+`countries` durchgeführt werden.
+
+# Probleme bei nicht erfüllter 3NF - Ursache
+
+- Inkonsistente Daten möglich
+- Änderungen müssen mehrfach durchgeführt werden
+- Unterschiedliche Versionen derselben Information können entstehen
+
+## Ursache
 
 $$
-\text{countries}(\text{id}, \text{name}, \text{area}, \text{capital\_city\_id})
+\text{id} \to \text{capital\_name}
 $$
 
 $$
-\text{cities}(\text{id}, \text{name}, \text{area}, \text{country\_id})
+\text{capital\_name} \to \text{capital\_current\_governor}
 $$
 
-## Effekt
+$\Rightarrow$ transitiv:
+$$
+\text{id} \to \text{capital\_current\_governor}
+$$
 
-- Keine transitiven Abhängigkeiten  
-- Eindeutige Modellierung der Hauptstadt
+Die Information über den aktuellen Bürgermeister gehört semantisch zur Hauptstadt,
+nicht direkt zum Land.
 
-## Eigenschaften
+# In 3NF überführt
+
+Trenne Hauptstadtinformationen aus:
+
+$$
+\text{countries}(\text{id}, \text{name}, \text{area}, \text{languages}, \text{capital\_name})
+$$
+
+$$
+\text{city\_governors}(\text{city\_name}, \text{country\_id}, \text{governor\_name}, \text{from\_date})
+$$
+
+## Idee
+
+Der aktuelle Bürgermeister wird nicht redundant in \texttt{countries} gespeichert,
+sondern aus \texttt{city\_governors} bestimmt.
+
+# Eigenschaften
 
 - Keine transitiven Abhängigkeiten
-- Keine Redundanz über Fremdschlüssel hinweg
-- Änderungen konsistent möglich
+- Keine Redundanz von Bürgermeisterdaten
+- Änderungen an Stadtregierungen erfolgen lokal
 
 # Boyce-Codd-Normalform (BCNF)
 
@@ -422,63 +457,106 @@ $$
 X \to A \;\Rightarrow\; X \text{ ist ein Superschlüssel}
 $$
 
+## Determinant
+
+Die linke Seite einer funktionalen Abhängigkeit
+heißt **Determinant**.
+
+In:
+$$
+X \to A
+$$
+
+ist also:
+$$
+X
+$$
+
+der Determinant.
+
 # Intuition
 
-- **Nur Schlüssel bestimmen Attribute**
-- Strenger als 3NF
-
-# Beispiel (nicht in BCNF)
+- Jeder Determinant muss ein Schlüssel sein
+- Nur Schlüssel dürfen andere Attribute bestimmen
+- Strenger als 3NF# Beispiel `river_cities` nicht in BCNF
 
 Relation:
 $$
-\text{cities}(\text{id}, \text{name}, \text{country\_id}, \text{is\_capital})
+\text{river\_cities}(\text{river\_name}, \text{city\_name}, \text{river\_km})
 $$
 
-Funktionale Abhängigkeiten:
+## Schlüssel
 
 $$
-\text{id} \to \text{name}, \text{country\_id}, \text{is\_capital}
+(\text{river\_name}, \text{city\_name})
 $$
 
 $$
-\text{country\_id} \to \text{is\_capital}
+(\text{river\_name}, \text{river\_km})
 $$
 
-Schlüssel:
-$$
-\text{id}
-$$
-
-## Problem
+## Funktionale Abhängigkeiten
 
 $$
-\text{country\_id} \to \text{is\_capital}
+(\text{river\_name}, \text{city\_name})
+\to
+\text{river\_km}
+$$
+
+$$
+(\text{river\_name}, \text{river\_km})
+\to
+\text{city\_name}
+$$
+
+Zusätzliche Annahme:
+$$
+\text{city\_name} \to \text{river\_km}
+$$
+
+# Problem
+
+$$
+\text{city\_name} \to \text{river\_km}
 $$
 
 aber:
 $$
-\text{country\_id} \text{ ist kein Superschlüssel}
+\text{city\_name}
 $$
 
-$Rightarrow$ Verletzung von BCNF
+ist kein Superschlüssel.
+
+$\Rightarrow$ Verletzung der BCNF
+
+# Probleme bei nicht erfüllter BCNF
+
+| river_name | city_name | river_km |
+|---|---|---:|
+| Rhein | Köln | 688 |
+| Rhein | Köln | 690 |
+
+## Probleme
+
+- Widersprüchliche Fakten möglich
+- Eine Stadt bestimmt mehrere km-Werte
+- Semantische Regeln werden nicht erzwungen
 
 # In BCNF überführt
 
-Zerlegung:
-
 $$
-\text{cities}(\text{id}, \text{name}, \text{country\_id})
+\text{city\_river\_positions}(\text{city\_name}, \text{river\_km})
 $$
 
 $$
-\text{countries}(\text{id}, \text{capital\_city\_id})
+\text{river\_cities}(\text{river\_name}, \text{city\_name})
 $$
 
 # Eigenschaften
 
-- Keine funktionalen Abhängigkeiten von Nicht-Schlüsseln  
-- Keine Redundanz durch implizite Regeln  
-- Eindeutige Verantwortlichkeit pro Relation
+- Jeder Determinant ist ein Schlüssel
+- Keine widersprüchlichen Ableitungen
+- Funktionale Abhängigkeiten eindeutig modelliert
 
 # Normalformen Zusammenfassung
 
