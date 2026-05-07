@@ -478,51 +478,43 @@ der Determinant.
 
 - Jeder Determinant muss ein Schlüssel sein
 - Nur Schlüssel dürfen andere Attribute bestimmen
-- Strenger als 3NF# Beispiel `river_cities` nicht in BCNF
+- Strenger als 3NF
+
+# Beispiel `city_postcodes` nicht in BCNF
 
 Relation:
 $$
-\text{river\_cities}(\text{river\_name}, \text{city\_name}, \text{river\_km})
+\text{city\_postcodes}(\text{city\_name}, \text{postcode}, \text{district})
 $$
 
 ## Schlüssel
 
 $$
-(\text{river\_name}, \text{city\_name})
-$$
-
-$$
-(\text{river\_name}, \text{river\_km})
+(\text{city\_name}, \text{postcode})
 $$
 
 ## Funktionale Abhängigkeiten
 
 $$
-(\text{river\_name}, \text{city\_name})
+(\text{city\_name}, \text{postcode})
 \to
-\text{river\_km}
-$$
-
-$$
-(\text{river\_name}, \text{river\_km})
-\to
-\text{city\_name}
+\text{district}
 $$
 
 Zusätzliche Annahme:
 $$
-\text{city\_name} \to \text{river\_km}
+\text{postcode} \to \text{district}
 $$
 
 # Problem
 
 $$
-\text{city\_name} \to \text{river\_km}
+\text{postcode} \to \text{district}
 $$
 
 aber:
 $$
-\text{city\_name}
+\text{postcode}
 $$
 
 ist kein Superschlüssel.
@@ -531,25 +523,25 @@ $\Rightarrow$ Verletzung der BCNF
 
 # Probleme bei nicht erfüllter BCNF
 
-| river_name | city_name | river_km |
-|---|---|---:|
-| Rhein | Köln | 688 |
-| Rhein | Köln | 690 |
+| city_name | postcode | district |
+|---|---|---|
+| Köln | 50667 | Innenstadt |
+| Köln | 50667 | Altstadt |
 
 ## Probleme
 
 - Widersprüchliche Fakten möglich
-- Eine Stadt bestimmt mehrere km-Werte
+- Dieselbe Postleitzahl bestimmt mehrere Bezirke
 - Semantische Regeln werden nicht erzwungen
 
 # In BCNF überführt
 
 $$
-\text{city\_river\_positions}(\text{city\_name}, \text{river\_km})
+\text{postcodes}(\text{postcode}, \text{district})
 $$
 
 $$
-\text{river\_cities}(\text{river\_name}, \text{city\_name})
+\text{city\_postcodes}(\text{city\_name}, \text{postcode})
 $$
 
 # Eigenschaften

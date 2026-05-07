@@ -1,5 +1,3 @@
--- Step One: Setup Schema
--------------------------
 BEGIN;
 
   -- CREATE cities
@@ -7,9 +5,9 @@ BEGIN;
     name TEXT NOT NULL,
     country_name TEXT NOT NULL,
     area REAL NOT NULL CHECK (area > 0),
-    governors TEXT NOT NULL, -- NF 1: Example entry 'Hanno Benz (2023-heute), Jochen Bartsch (2017-2023)' 
+    governors TEXT NOT NULL,
     country_id INTEGER NOT NULL,
-    PRIMARY KEY (name, country_id), -- NF 2: country_name only depends on country_id NOT on name of the city
+    PRIMARY KEY (name, country_id),
     FOREIGN KEY (country_id) REFERENCES countries(id)
   );
 
@@ -18,8 +16,8 @@ BEGIN;
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     area REAL NOT NULL CHECK (area > 0),
-    languages TEXT NOT NULL, -- NF 1: Second example
-    capital_name TEXT NOT NULL, -- NF 3: id -> capital_name und capital_name -> capital_current_governor; also transitiv id -> capital_current_governor
+    languages TEXT NOT NULL,
+    capital_name TEXT NOT NULL,
     capital_current_governor TEXT NOT NULL,
     FOREIGN KEY (id, capital_name) REFERENCES cities(country_id, name)
   );
@@ -35,7 +33,7 @@ BEGIN;
   CREATE TABLE countries_to_rivers (
     country_id INTEGER NOT NULL,
     country_capital_name TEXT NOT NULL,
-    country_capital_area REAL NOT NULL, -- NF 3: country_id -> country_capital_name -> country_capital_area
+    country_capital_area REAL NOT NULL,
     river_id INTEGER NOT NULL,
     PRIMARY KEY (country_id, river_id),
     FOREIGN KEY (country_id) REFERENCES countries(id),
@@ -46,69 +44,27 @@ BEGIN;
   CREATE TABLE river_cities (
       river_name TEXT NOT NULL,
       city_name TEXT NOT NULL,
-      river_km REAL NOT NULL CHECK (river_km >= 0), -- Violation of BCNF because city_name is part of the key, but not superkey and implies river_km
-      PRIMARY KEY (river_name, city_name),
-      UNIQUE (river_name, river_km)
+      PRIMARY KEY (river_name, city_name)
+  );
+
+  -- CREATE city_postcodes
+  CREATE TABLE city_postcodes (
+    city_name TEXT,
+    postcode TEXT,
+    district TEXT,
+    PRIMARY KEY(city_name, postcode)
   );
 
   -- CREATE ports
   CREATE TABLE ports (
     name TEXT NOT NULL,
-    river_id INTEGER,
-    river_mouth_coordinates TEXT NOT NULL -- BCNF violation: river_id -> river_spring_coordinates, but river_id is not superkey
+    river_id INTEGER NOT NULL,
+    river_mouth_coordinates TEXT NOT NULL,
     country_id INTEGER NOT NULL,
-    country_name TEXT NOT NULL, -- Second Violation of NF2, because depends only on country_id, not the other two PRIMARY KEY attributes
+    country_name TEXT NOT NULL,
     PRIMARY KEY (name, country_id),
     FOREIGN KEY (country_id) REFERENCES countries(id),
     FOREIGN KEY (river_id) REFERENCES rivers(id)
   );
 
 COMMIT;
--- END Step One
-
--- Step Two - Solve a violation of 1NF
-BEGIN;
-
-  -- One tuple per city-governor pair
-  CREATE TABLE city_governors (
-    city_name TEXT NOT NULL,
-    country_id INTEGER NOT NULL,
-    governor_name TEXT NOT NULL,
-    from_date TEXT NOT NULL,
-    PRIMARY KEY (city_name, country_id, from_date),
-    FOREIGN KEY (city_name, country_id)
-        REFERENCES cities(name, country_id)
-  );
-
-  -- Clean up violation of 1NF
-  ALTER TABLE cities DROP COLUMN governors;
-
-COMMIT;
--- END STEP Two
-
--- INSERT example data:
--- Countries
-INSERT INTO countries (name, area, languages) VALUES
-('Deutschland', 357000, 'Deutsch'),
-('Österreich', 84000, 'Deutsch'),
-('Ungarn', 93000, 'Ungarisch');
-
--- Rivers
-INSERT INTO rivers (name, length) VALUES
-('Rhein', 1230),
-('Donau', 2850);
-
--- Cities
-INSERT INTO cities (name, area, is_capital, governors, country_id) VALUES
-('Wien', 415, 1, 'Michael Ludwig', 2),
-('Budapest', 525, 1, 'Gergely Karácsony', 3),
-('Berlin', 892, 1, 'Kai Wegner', 1),
-('Darmstadt', 122, 0, 'Hanno Benz, Jochen Partsch', 1),
-('Köln', 405, 0, 'Henriette Reker', 1);
-
--- countries_to_rivers (n:m)
-INSERT INTO countries_to_rivers (country_id, river_id) VALUES
-(1, 1), -- Deutschland - Rhein
-(1, 2), -- Deutschland - Donau
-(2, 2), -- Österreich - Donau
-(3, 2); -- Ungarn - Donau
