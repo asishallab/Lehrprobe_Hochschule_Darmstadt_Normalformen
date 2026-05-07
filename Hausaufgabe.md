@@ -86,8 +86,6 @@ Warum ist `postcode` kein Superschlüssel?
 
 Erklären Sie, warum dies eine Verletzung der BCNF darstellt.
 
-Formulieren Sie anschließend eine Zerlegung des Schemas, die diese Verletzung vermeidet.
-
 ## Betrachten Sie zusätzlich die Tabelle `ports`.
 
 Warum ist die Speicherung von `river_mouth_coordinates` in `ports` problematisch?

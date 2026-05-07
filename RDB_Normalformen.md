@@ -237,7 +237,12 @@ $$
 - Relation bleibt Teilmenge eines kartesischen Produkts  
 - Alle Tupel sind wohldefiniert in:
 $$
-D_{\text{id}} \times D_{\text{name}} \times D_{\text{governor}}
+\begin{gathered}
+D_{\text{city\_name}} \times \\
+D_{\text{country\_id}} \times \\
+D_{\text{governor\_name}} \times \\
+D_{\text{from\_date}}
+\end{gathered}
 $$
 
 # Zweite Normalform (2NF)
@@ -525,8 +530,8 @@ $\Rightarrow$ Verletzung der BCNF
 
 | city_name | postcode | district |
 |---|---|---|
-| Köln | 50667 | Innenstadt |
-| Köln | 50667 | Altstadt |
+| Köln        | 50667 | Innenstadt |
+| Musterstadt | 50667 | Altstadt |
 
 ## Probleme
 

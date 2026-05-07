@@ -274,22 +274,6 @@ postcode -> district
 
 Damit liegt eine BCNF-Verletzung vor.
 
-### Zerlegung in BCNF
-
-```sql
-BEGIN;
-    CREATE TABLE city_districts (
-        postcode TEXT PRIMARY KEY,
-        city_name TEXT NOT NULL,
-        disctrict_name TEXT NOT NULL,
-        FOREIGN KEY (city_name) REFERS TO cities(name);
-    );
-COMMIT;
-```
-
-**Begründung**: `postcode` ist nun Superschlüssel und bestimmt sowohl
-`city_name` als auch `disctrict_name`.
-
 ## Tabelle `ports`
 
 Relation:
@@ -310,17 +294,6 @@ river_id -> river_mouth_coordinates
 
 Die Flussmündung ist Eigenschaft des Flusses,
 nicht des Hafens.
-
-### Korrektur
-
-```sql
-CREATE TABLE rivers (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    length REAL NOT NULL,
-    river_mouth_coordinates TEXT NOT NULL
-);
-```
 
 ## 6. Aufgabe: 1 NF
 
@@ -395,8 +368,8 @@ bei Schlüssel:
 
 ```sql
 BEGIN;
-    UPDATE TABLE cities DROP COLUMN country_name;
-    UPDATE TABLE ports DROP COLUMN country_name;
+    ALTER TABLE cities DROP COLUMN country_name;
+    ALTER TABLE ports DROP COLUMN country_name;
 COMMIT;
 ```
 
@@ -404,8 +377,9 @@ Ländernamen ausschließlich in `countries` speichern. Die Information kann übe
 `JOIN` Statements selektiert werden:
 
 ```sql
-SELECT * FROM cities AS c LEFT JOIN countries AS n WHERE c.country_id = n.id AND
-    c.name = 'Berlin';
+SELECT * FROM cities AS c
+    LEFT JOIN countries AS n ON c.country_id = n.id
+    WHERE c.name = 'Berlin';
 ```
 
 ## Konsistenz
@@ -444,17 +418,8 @@ country_capital_name -> country_capital_area
 
 ## Korrektur
 
-Hauptstadtinformationen auslagern z.B. in `countries` über einen Foreign Key:
-
-```sql
-BEGIN;
-    ALTER TABLE countries ADD COLUMN capital_id INTEGER NOT NULL;
-    ALTER TABLE countries FOREIGN KEY (capital_id) REFERENCES cities (id);
-    UPDATE TABLE countries AS n SET capital_id =
-        (SELECT id FROM cities AS c WHERE c.name = n.capital_name);
-    ALTER TABLE countries DROP COLUMN capital_name;
-COMMIT;
-```
+Hauptstadtinformationen auslagern z.B. in `countries` über einen Foreign Key,
+der die Hauptstadt eindeutig referenziert.
 
 ## 9. Aufgabe: BCNF
 
