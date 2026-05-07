@@ -147,24 +147,53 @@ Speicher pro Ländername:
 10 * 4 = 40 Bytes
 ```
 
-Ländername kommt vor:
+Ländername wird benötigt in:
 
-* `name` in `countries`
-* `country_name` in `cities`
-* `country_name` in `ports`
+* `countries.name`
 
-Eine Million Städte:
+Redundant gespeichert wird er zusätzlich in:
+
+* `cities.country_name`
+* `ports.country_name`
+
+Bei 100.000 Ländern und 1.000.000 Städten ergibt sich:
 
 ```text
-1.000.000 * 40 * 3 Bytes
-= 120.000.000 Bytes
-equals approximately 120 MB
+countries.name:
+100.000 * 40 = 4.000.000 Bytes ca. 4 MB
+
+cities.country_name:
+1.000.000 * 40 = 40.000.000 Bytes ca. 40 MB
+```
+
+Für `ports.country_name` hängt der Speicherbedarf von der Anzahl der Häfen ab:
+
+```text
+N_ports * 40 Bytes
+```
+
+Bei ebenfalls 1.000.000 Häfen:
+
+```text
+1.000.000 * 40 = 40.000.000 Bytes ≈ 40 MB
+```
+
+Gesamt:
+
+```text
+4 MB + 40 MB + 40 MB = 84 MB
+```
+
+Davon redundant:
+
+```
+40 MB + 40 MB = 80 MB
 ```
 
 ## Problem
 
 Würde der Name eines Landes nur in einer Tabelle gespeicher, wäre der
-Speicherbedarf um ein Drittel kleiner. Inkonsistenzen könen leicht durch
+Speicherbedarf deutlich kleiner. Inkonsistenzen könen leicht durch
 unvollständige updates entstehen.
 
 ## Beispiel UPDATE
