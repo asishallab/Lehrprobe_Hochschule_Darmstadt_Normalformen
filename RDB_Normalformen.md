@@ -15,7 +15,9 @@ colortheme: default
 * Grundkenntnisse in relationalen Datenbanken werden vorausgesetzt:
   * grundlegende Kommandos in Structured Query Language (SQL)
   * Grundlagen der relationalen Algebra
-* Code in English, Inhalt in Deutsch
+* Schema für: Stadt, Land, Fluss
+* Vorlesung in Deutsch
+* SQL-Code and Comments in English
 
 # Relationale Datenbanken
 
@@ -55,7 +57,7 @@ $$
 R \subseteq D_1 \times D_2 \times \dots \times D_n
 $$
 
-Schema:
+Schema / Signatur:
 
 $$
 R(A_1, A_2, \dots, A_n)
@@ -82,11 +84,12 @@ Kurzschreibweise:
 
 $$
 t = (a_1, a_2, \dots, a_n)
+\quad \text{mit } a_i \in D_i
 $$
 
-# Schema Stadt `cities`
+# Erste Relation `cities` aus Stadt, Land, Fluss
 
-Schema:
+Beispiel-Schema:
 $$
 \text{cities}(\text{name}, \text{country\_name}, \text{area}, \text{governors}, \text{country\_id})
 $$
@@ -97,17 +100,6 @@ $$
 $$
 
 Mit Domänen:
-$$
-\begin{gathered}
-\text{name} : D_{\text{name}}, \quad
-\text{country\_name} : D_{\text{country\_name}}, \quad
-\text{area} : D_{\text{area}}, \quad \\
-\text{governors} : D_{\text{governors}}, \quad
-\text{country\_id} : D_{\text{country\_id}}
-\end{gathered}
-$$
-
-Zum Beispiel:
 $$
 \begin{gathered}
 D_{\text{name}} = \text{String}, \quad
@@ -172,70 +164,62 @@ Jedes Feld enthält genau **einen Wert**
 
 # Beispiel `cities` (nicht in 1NF)
 
-| id | name | governors |
-|---|---|---|
-| 1  | Darmstadt | "Hanno Benz, Jochen Partsch"|
+| name | governors |
+|---|---|
+| Darmstadt | "Hanno Benz (ab Juni 2023), Jochen Partsch (ab Juni 2011)"|
 
-# Beispiel `cities` in 1NF überführt
+## Probleme bei nicht erfüllter 1NF
+
+* Es gibt kein SQL Kommando, um den Bürgermeister für seinen Amtsbeginn direkt
+  auszulesen.
+* Man müsste in seinem Programmcode den String
+  ```text
+  Hanno Benz (ab Juni 2023), Jochen Partsch (ab Juni 2011)
+  ```
+  parsen.
+
+# Algorithmus zur Überführung in 1NF
+
+* Ersetze nicht-atomare Werte durch **mehrere Tupel**:
+  $$
+  R' =
+  \{
+  (\text{"Darmstadt"},\; 1,\; g,\; d)
+  \mid
+  (g,d) \in t(\text{governors})
+  \}
+  $$
+
+  mit:
+  $$
+  g \in D_{\text{governor,String}}
+  \quad \text{und} \quad
+  d \in D_{\text{Amtsbeginn,Date}}
+  $$
+  
+* Lagere mehrwertige oder zusammengesetzte Attribute in eine eigene Relation aus
+* Verknüpfe die neue Relation über Fremdschlüssel
+
+# Ergebnis: `cities` in 1NF überführt
 
 Neue Tabelle \texttt{city\_governors}:
 
-| city_name | country_id | governor_name | from_date |
-|---|---:|---|---|
-| Darmstadt | 1 | "Jochen Partsch" | "2017-06-25" |
-| Darmstadt | 1 | "Hanno Benz" | "2023-06-25" |
+| id | name | country_id | governor_name | from_date |
+|---|---|---:|---|---|
+| 1 | Darmstadt | 1 | "Jochen Partsch" | "2017-06-25" |
+| 2 | Darmstadt | 1 | "Hanno Benz" | "2023-06-25" |
 
-# 1NF Formal (algebraische Sicht)
+Mit dem Fremdschlüssel:
+```sql
+FOREIGN KEY (name, country_id) REFERENCES 
+  cities (name, country_id)
+```
 
-Keine **nicht-atomaren Werte** in Tupeln
-
-## Idee
-
-Verletzung von 1NF:
-Ein Attribut enthält mehrere Werte pro Tupel
-
-## Beispiel (nicht in 1NF)
-
-Relation:
-$$
-R(\text{city\_name}, \text{country\_id}, \text{governors})
-$$
-
-mit Tupel:
-$$
-t = (\text{"Darmstadt"},\; 1,\; \{(\text{"Jochen Partsch"}, \text{"2017-06-25"}),\;(\text{"Hanno Benz"}, \text{"2023-06-25"})\})
-$$
-
-$\Rightarrow$ $\text{governors} \notin D_{\text{governors}}$ (nicht atomar)
-
-# Algebraische Transformation
-
-Ersetze nicht-atomare Werte durch **mehrere Tupel**:
-
-$$
-R' = \bigcup_{(g,d) \in t(\text{governors})}
-(\text{"Darmstadt"},\; 1,\; g,\; d)
-$$
-
-## Resultat (1NF)
-
-$$
-R'(\text{city\_name}, \text{country\_id}, \text{governor\_name}, \text{from\_date})
-$$
-
-mit:
-$$
-(\text{"Darmstadt"},\; 1,\; \text{"Jochen Partsch"},\; \text{"2017-06-25"})
-$$
-$$
-(\text{"Darmstadt"},\; 1,\; \text{"Hanno Benz"},\; \text{"2023-06-25"})
-$$
-
-# 1NF Formale Interpretation
+# 1NF Zusammenfassung
 
 - Keine Mengenwerte in Attributen  
 - Relation bleibt Teilmenge eines kartesischen Produkts  
-- Alle Tupel sind wohldefiniert in:
+- Im Beispiel sind alle Tupel wohldefiniert in:
 $$
 \begin{gathered}
 D_{\text{city\_name}} \times \\
@@ -247,34 +231,37 @@ $$
 
 # Zweite Normalform (2NF)
 
-Eine Relation ist in **2NF**, wenn sie in 1NF ist und
-alle Nicht-Schlüsselattribute **voll funktional** vom gesamten Schlüssel abhängen
+Eine Relation ist in **2NF**, wenn sie in 1NF ist und alle Nicht-Schlüsselattribute **voll funktional** vom gesamten Schlüssel abhängen.
 
 ## Formal
 
 Sei
-$$
-R(A_1, \dots, A_n)
-$$
+$$ R(A_1, \dots, A_n) $$
 
-mit Schlüssel $K \subseteq \{A_1, \dots, A_n\}$
-
-Dann gilt für alle funktionalen Abhängigkeiten:
+Dann gilt für alle funktionalen Abhängigkeiten
 $$
 X \to A,\quad A \notin K
 $$
 
+darf nicht gelten:
 $$
-X \subseteq K \;\Rightarrow\; X = K
+X \subsetneq K
 $$
 
-Keine **partiellen Abhängigkeiten** von Teilmengen des Schlüssels
+Keine **partiellen Abhängigkeiten** von Teilmengen des Schlüssel.
+
+# 2NF Intuition
+
+- Attribute sollen vom **gesamten Schlüssel** abhängen.
+- Nicht nur von einem Teil eines zusammengesetzten Schlüssels.
+- Jede Information soll genau dort gespeichert werden,
+  wo sie logisch hingehört.
 
 # Beispiel `cities` nicht in 2NF
 
 Relation:
 $$
-\text{cities}(\text{name}, \text{country\_name}, \text{country\_id}, \dots)
+\text{cities}(\text{name}, \text{country\_id}, \text{country\_name}, \dots)
 $$
 
 Schlüssel:
@@ -301,13 +288,19 @@ Bei mehreren Städten desselben Landes wird der Ländername mehrfach gespeichert
 
 ## Konsequenz
 
-- Redundanz
-- Änderungsanomalien
-- Verletzung der 2NF
+- Redundanz: Der Name des Landes steht _auch_ in `countries.name`.
+- Änderungsanomalien; Bsp.: Update "Deutschland" zu "Bundesrepublik
+  Deutschland" in `countries` aber vergesse update `cities`.
 
-# In 2NF überführt
+# Algorithmus zur Überführung in 2NF
 
-Zerlegung in Relationen mit vollen Abhängigkeiten:
+- Entferne partielle Abhängigkeiten.
+- Lagere abhängige Attribute in eigene Relationen aus.
+- Verbinde Relationen bei Bedarf über `JOIN`.
+
+# Schema in 2NF überführt
+
+Zerlegung in Relationen mit vollen funktionalen Abhängigkeiten:
 
 $$
 \text{cities}(\text{name}, \text{country\_id}, \dots)
@@ -317,11 +310,34 @@ $$
 \text{countries}(\text{id}, \text{name}, \dots)
 $$
 
+## Resultat (2NF)
+
+$$
+R_1 = \text{countries}(\text{id}, \text{name})
+$$
+
+$$
+R_2 = \text{cities}(\text{name}, \text{country\_id}, \dots)
+$$
+
 ## Eigenschaften
 
 - \texttt{country\_name} steht nur noch in \texttt{countries.name}
 - Änderungen am Ländernamen erfolgen lokal
 - Keine partielle Abhängigkeit vom zusammengesetzten Schlüssel
+- Mit
+  ```sql
+  SELECT * FROM cities AS c LEFT JOIN countries AS n
+    ON c.country_id = n.id;
+  ```
+  erhalte ich immer noch die Ländernamen.
+
+# Zusammenfassung 2NF
+
+- Keine partiellen Abhängigkeiten.
+- Nicht-Schlüsselattribute hängen vom gesamten Schlüssel ab.
+- Redundante Attribute werden in eigene Relationen ausgelagert.
+- Daten bleiben über `JOIN` rekonstruierbar.
 
 # Dritte Normalform (3NF)
 
@@ -390,9 +406,10 @@ $$
 \text{id} \to \text{capital\_current\_governor}
 $$
 
-aber \texttt{capital\_current\_governor} ist keine direkte Eigenschaft des Landes,
-sondern der Hauptstadt.
+aber \texttt{capital\_current\_governor} ist keine direkte Eigenschaft des
+Landes, sondern der Hauptstadt bzw. `city_governors`.
 
+Genauer: Das Nicht-Schlüsselattribut hängt transitiv von Schlüssel ab.
 $\Rightarrow$ Verletzung der 3NF
 
 # Probleme bei nicht erfüllter 3NF - Beispiel
@@ -407,31 +424,15 @@ Bei transitiven Abhängigkeiten werden Informationen **redundant** gespeichert:
 Änderungen des aktuellen `governor` müssten in `city_governors` *und*
 `countries` durchgeführt werden.
 
-# Probleme bei nicht erfüllter 3NF - Ursache
+# Algorithmus zur Überführung in 3NF
 
-- Inkonsistente Daten möglich
-- Änderungen müssen mehrfach durchgeführt werden
-- Unterschiedliche Versionen derselben Information können entstehen
+- Entferne transitive Abhängigkeiten
+- Lagere indirekt abhängige Attribute in eigene Relationen aus
+- Speichere Informationen nur bei der Entität,
+  zu der sie semantisch gehören
+- Verbinde Relationen bei Bedarf über Fremdschlüssel und `JOIN`
 
-## Ursache
-
-$$
-\text{id} \to \text{capital\_name}
-$$
-
-$$
-\text{capital\_name} \to \text{capital\_current\_governor}
-$$
-
-$\Rightarrow$ transitiv:
-$$
-\text{id} \to \text{capital\_current\_governor}
-$$
-
-Die Information über den aktuellen Bürgermeister gehört semantisch zur Hauptstadt,
-nicht direkt zum Land.
-
-# In 3NF überführt
+# Schema in 3NF überführt
 
 Trenne Hauptstadtinformationen aus:
 
@@ -443,7 +444,7 @@ $$
 \text{city\_governors}(\text{city\_name}, \text{country\_id}, \text{governor\_name}, \text{from\_date})
 $$
 
-## Idee
+## Lösung
 
 Der aktuelle Bürgermeister wird nicht redundant in \texttt{countries} gespeichert,
 sondern aus \texttt{city\_governors} bestimmt.
@@ -453,6 +454,13 @@ sondern aus \texttt{city\_governors} bestimmt.
 - Keine transitiven Abhängigkeiten
 - Keine Redundanz von Bürgermeisterdaten
 - Änderungen an Stadtregierungen erfolgen lokal
+
+# Zusammenfassung 3NF
+
+- Keine transitiven Abhängigkeiten
+- Nicht-Schlüsselattribute hängen nicht voneinander ab
+- Informationen werden nur bei ihrer eigentlichen Entität gespeichert
+- Daten bleiben über `JOIN` rekonstruierbar
 
 # Boyce-Codd-Normalform (BCNF)
 
@@ -539,7 +547,15 @@ $\Rightarrow$ Verletzung der BCNF
 - Dieselbe Postleitzahl bestimmt mehrere Bezirke
 - Semantische Regeln werden nicht erzwungen
 
-# In BCNF überführt
+# Algorithmus zur Überführung in BCNF
+
+- Bestimme alle funktionalen Abhängigkeiten
+- Suche Determinanten, die keine Superschlüssel sind
+- Lagere die davon abhängigen Attribute in eigene Relationen aus
+- Zerlege Relationen so, dass jeder Determinant ein Schlüssel wird
+- Verbinde Relationen bei Bedarf über Fremdschlüssel und `JOIN`
+
+# Schema in BCNF überführt
 
 $$
 \text{postcodes}(\text{postcode}, \text{district})
@@ -555,9 +571,19 @@ $$
 - Keine widersprüchlichen Ableitungen
 - Funktionale Abhängigkeiten eindeutig modelliert
 
+# Zusammenfassung BCNF
+
+- Jeder Determinant ist ein Superschlüssel
+- Nur Schlüssel dürfen andere Attribute bestimmen
+- Strenger als 3NF
+- Funktionale Abhängigkeiten werden eindeutig modelliert
+- Daten bleiben über `JOIN` rekonstruierbar
+
 # Normalformen Zusammenfassung
 
-* 1NF: keine Listen
-* 2NF: keine Teilabhängigkeiten
-* 3NF: keine indirekten Abhängigkeiten
-* BCNF: nur Schlüssel bestimmen etwas
+* 1NF: Keine Listen
+* 2NF: Keine Teilabhängigkeiten
+* 3NF: Keine indirekten Abhängigkeiten
+* BCNF: Nur Superschlüssel bestimmen Attribute
+
+_Dankeschön!_

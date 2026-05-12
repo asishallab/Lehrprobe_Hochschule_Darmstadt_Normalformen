@@ -175,7 +175,7 @@ N_ports * 40 Bytes
 Bei ebenfalls 1.000.000 Häfen:
 
 ```text
-1.000.000 * 40 = 40.000.000 Bytes ≈ 40 MB
+1.000.000 * 40 = 40.000.000 Bytes ca. 40 MB
 ```
 
 Gesamt:
